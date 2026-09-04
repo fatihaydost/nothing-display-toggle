@@ -1,5 +1,5 @@
-// Red status dot that pings like radar while anything is live.
-// Used by the desktop card header and by the panel badge.
+// Status dot that pings like radar while anything is live.
+// Used by the card header and by the panel badge.
 import QtQuick
 
 Item {
@@ -7,6 +7,7 @@ Item {
 
     property bool live: false
     property real size: 7
+    property color dotColor: "#ff4444"
 
     implicitWidth: size
     implicitHeight: size
@@ -17,7 +18,7 @@ Item {
         width: dot.size
         height: dot.size
         radius: dot.size / 2
-        color: "#ff4444"
+        color: dot.dotColor
         visible: dot.live
 
         SequentialAnimation {
@@ -42,7 +43,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: dot.size / 2
-        color: "#ff4444"
+        color: dot.dotColor
         opacity: dot.live ? 1.0 : 0.28
         Behavior on opacity { NumberAnimation { duration: 150 } }
     }

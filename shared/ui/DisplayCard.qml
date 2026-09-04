@@ -9,6 +9,7 @@ Item {
     // the desktop widget floats the card with a margin; the popup fills instead
     property int margin: 10
 
+    readonly property Theme theme: controller ? controller.theme : null
     readonly property int rowCount: Math.max(1, controller ? controller.outputs.count : 0)
 
     implicitWidth: 220
@@ -17,7 +18,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         anchors.margins: card.margin
-        color: "#1a1a1a"
+        color: card.theme ? card.theme.background : "#1a1a1a"
         radius: 22
         clip: true
 
@@ -35,12 +36,12 @@ Item {
 
                 Text {
                     text: "DISPLAYS"
-                    color: "#ffffff"
+                    color: card.theme ? card.theme.onSurface : "#ffffff"
                     opacity: 0.5
                     font.pixelSize: 11
-                    font.letterSpacing: 3
-                    font.family: card.controller ? card.controller.uiFont : "monospace"
-                    font.weight: Font.Medium
+                    font.letterSpacing: card.theme ? card.theme.headerSpacing : 3
+                    font.family: card.theme ? card.theme.fontFamily : "monospace"
+                    font.weight: card.theme ? card.theme.titleWeight : Font.Medium
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -48,6 +49,7 @@ Item {
                 StatusDot {
                     size: 7
                     live: card.controller && card.controller.enabledCount > 0
+                    dotColor: card.theme ? card.theme.accent : "#ff4444"
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.right: hdrRight.left
                     anchors.rightMargin: 7
@@ -58,11 +60,11 @@ Item {
                     text: card.controller
                           ? card.controller.enabledCount + "/" + card.controller.outputs.count
                           : ""
-                    color: "#ffffff"
+                    color: card.theme ? card.theme.onSurface : "#ffffff"
                     opacity: 0.5
                     font.pixelSize: 11
-                    font.letterSpacing: 1
-                    font.family: card.controller ? card.controller.uiFont : "monospace"
+                    font.letterSpacing: card.theme ? card.theme.labelSpacing : 1
+                    font.family: card.theme ? card.theme.fontFamily : "monospace"
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.right: parent.right
                 }
@@ -79,15 +81,15 @@ Item {
                     Rectangle {
                         width: parent.width
                         height: 1
-                        color: "#2e2e2e"
+                        color: card.theme ? card.theme.divider : "#2e2e2e"
                         visible: index > 0
                     }
 
                     ToggleRow {
                         width: parent.width
+                        theme: card.theme
                         title: model.label
                         connector: model.conn
-                        fontFamily: card.controller.uiFont
                         on: model.enabled
                         busy: card.controller.busy
                         locked: card.controller.isLocked(model.enabled)
@@ -102,11 +104,11 @@ Item {
                          && card.controller.outputs.count === 0
                 width: parent.width
                 text: "NO OUTPUT FOUND\nIS KSCREEN-DOCTOR INSTALLED?"
-                color: "#ff4444"
+                color: card.theme ? card.theme.danger : "#ff4444"
                 opacity: 0.9
                 font.pixelSize: 10
-                font.letterSpacing: 1.5
-                font.family: card.controller ? card.controller.uiFont : "monospace"
+                font.letterSpacing: card.theme ? card.theme.labelSpacing : 1.5
+                font.family: card.theme ? card.theme.fontFamily : "monospace"
                 wrapMode: Text.WordWrap
             }
 
@@ -127,7 +129,8 @@ Item {
                         color: card.controller && card.controller.outputs.count > 0
                                && index < Math.round(12 * card.controller.enabledCount
                                                      / card.controller.outputs.count)
-                               ? "#ff4444" : "#333333"
+                               ? (card.theme ? card.theme.accent : "#ff4444")
+                               : (card.theme ? card.theme.dotOff : "#333333")
                         opacity: 0.9
                         Behavior on color { ColorAnimation { duration: 150 } }
                     }

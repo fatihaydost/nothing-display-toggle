@@ -10,6 +10,8 @@ Item {
     property DisplayController controller: null
     signal clicked()
 
+    readonly property Theme theme: controller ? controller.theme : null
+
     readonly property bool vertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property real thickness: vertical ? badge.width : badge.height
 
@@ -31,17 +33,18 @@ Item {
         StatusDot {
             size: badge.dotSize
             live: badge.controller && badge.controller.enabledCount > 0
+            dotColor: badge.theme ? badge.theme.accent : "#ff4444"
         }
 
         Text {
             text: badge.controller
                   ? badge.controller.enabledCount + "/" + badge.controller.outputs.count
                   : "…"
-            color: "#ffffff"
+            color: badge.theme ? badge.theme.onSurface : "#ffffff"
             opacity: 0.85
             font.pixelSize: badge.textPx
-            font.letterSpacing: 1
-            font.family: badge.controller ? badge.controller.uiFont : "monospace"
+            font.letterSpacing: badge.theme ? badge.theme.labelSpacing : 1
+            font.family: badge.theme ? badge.theme.fontFamily : "monospace"
         }
     }
 

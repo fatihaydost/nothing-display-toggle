@@ -4,14 +4,6 @@
       xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
   <kcfgfile name="" />
   <group name="General">
-    <!-- auto | inline | popup -->
-    <entry name="panelMode" type="String">
-      <default>auto</default>
-    </entry>
-    <!-- in "auto": switch to a badge above this many displays -->
-    <entry name="inlineThreshold" type="Int">
-      <default>2</default>
-    </entry>
     <!-- nothing | kde | minimal | neon -->
     <entry name="theme" type="String">
       <default>nothing</default>

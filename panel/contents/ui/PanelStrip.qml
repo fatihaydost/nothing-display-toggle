@@ -10,6 +10,8 @@ Item {
 
     property DisplayController controller: null
 
+    readonly property Theme theme: controller ? controller.theme : null
+
     readonly property bool vertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property real thickness: vertical ? strip.width : strip.height
 
@@ -38,17 +40,19 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 radius: height / 2
-                color: strip.controller && strip.controller.queried ? "#4a2020" : "#333333"
-                opacity: 0.7
+                color: strip.controller && strip.controller.queried
+                       ? (strip.theme ? strip.theme.danger : "#ff4444")
+                       : (strip.theme ? strip.theme.trackOff : "#333333")
+                opacity: strip.controller && strip.controller.queried ? 0.35 : 0.7
             }
 
             Text {
                 anchors.centerIn: parent
                 text: strip.controller && strip.controller.queried ? "!" : "…"
-                color: "#ffffff"
+                color: strip.theme ? strip.theme.onSurface : "#ffffff"
                 opacity: 0.7
                 font.pixelSize: strip.labelPx
-                font.family: strip.controller ? strip.controller.uiFont : "monospace"
+                font.family: strip.theme ? strip.theme.fontFamily : "monospace"
             }
         }
 
@@ -68,12 +72,12 @@ Item {
                     id: label
                     text: model.label
                     visible: strip.showLabel
-                    color: "#ffffff"
+                    color: strip.theme ? strip.theme.onSurface : "#ffffff"
                     opacity: model.enabled ? 0.95 : 0.4
                     font.pixelSize: strip.labelPx
-                    font.letterSpacing: 0.5
-                    font.family: strip.controller.uiFont
-                    font.weight: Font.Medium
+                    font.letterSpacing: strip.theme ? strip.theme.labelSpacing * 0.4 : 0.5
+                    font.family: strip.theme ? strip.theme.fontFamily : "monospace"
+                    font.weight: strip.theme ? strip.theme.titleWeight : Font.Medium
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
 
@@ -87,7 +91,8 @@ Item {
                     radius: height / 2
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    color: model.enabled ? "#ff4444" : "#333333"
+                    color: model.enabled ? (strip.theme ? strip.theme.accent : "#ff4444")
+                                         : (strip.theme ? strip.theme.trackOff : "#333333")
                     opacity: strip.controller.busy ? 0.55 : (chip.locked ? 0.7 : 1.0)
 
                     Behavior on color { ColorAnimation { duration: 150 } }
@@ -98,7 +103,7 @@ Item {
                         width: parent.height - 2 * inset
                         height: width
                         radius: width / 2
-                        color: "#ffffff"
+                        color: strip.theme ? strip.theme.knob : "#ffffff"
                         anchors.verticalCenter: parent.verticalCenter
                         x: model.enabled ? parent.width - width - inset : inset
 

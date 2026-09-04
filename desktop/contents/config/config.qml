@@ -2,12 +2,6 @@ import org.kde.plasma.configuration 2.0
 
 ConfigModel {
     ConfigCategory {
-        name: i18n("Panel")
-        icon: "configure-symbolic"
-        source: "configGeneral.qml"
-    }
-
-    ConfigCategory {
         name: i18n("Appearance")
         icon: "preferences-desktop-theme-symbolic"
         source: "ConfigTheme.qml"

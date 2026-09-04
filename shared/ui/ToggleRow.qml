@@ -3,9 +3,9 @@ import QtQuick
 Item {
     id: row
 
+    property Theme theme: null
     property string title: ""
     property string connector: ""
-    property string fontFamily: ""
     property bool on: true
     property bool busy: false
     // last enabled output cannot be switched off
@@ -21,13 +21,13 @@ Item {
         onClicked: if (!row.locked) row.toggled()
     }
 
-    // red accent bar
+    // accent bar
     Rectangle {
         id: bar
         width: 3
         height: 28
         radius: 1.5
-        color: "#ff4444"
+        color: row.theme ? row.theme.accent : "#ff4444"
         opacity: row.on ? 1.0 : 0.3
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
@@ -43,26 +43,27 @@ Item {
 
         Text {
             text: row.title
-            color: "#ffffff"
+            color: row.theme ? row.theme.onSurface : "#ffffff"
             opacity: row.on ? 1.0 : 0.45
             font.pixelSize: 17
-            font.family: row.fontFamily
-            font.weight: Font.Medium
+            font.family: row.theme ? row.theme.fontFamily : "monospace"
+            font.weight: row.theme ? row.theme.titleWeight : Font.Medium
 
             Behavior on opacity { NumberAnimation { duration: 150 } }
         }
 
         Text {
             text: row.busy ? "SWITCHING" : (row.on ? row.connector : "SLEEPING")
-            color: row.on ? "#ffffff" : "#ff4444"
+            color: row.on ? (row.theme ? row.theme.onSurface : "#ffffff")
+                          : (row.theme ? row.theme.danger : "#ff4444")
             opacity: row.on ? 0.45 : 0.9
             font.pixelSize: 9
-            font.letterSpacing: 1.5
-            font.family: row.fontFamily
+            font.letterSpacing: row.theme ? row.theme.labelSpacing : 1.5
+            font.family: row.theme ? row.theme.fontFamily : "monospace"
         }
     }
 
-    // Nothing-style pill toggle
+    // pill toggle
     Rectangle {
         id: track
         width: 44
@@ -70,7 +71,8 @@ Item {
         radius: 11
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        color: row.on ? "#ff4444" : "#333333"
+        color: row.on ? (row.theme ? row.theme.accent : "#ff4444")
+                      : (row.theme ? row.theme.trackOff : "#333333")
         opacity: row.busy ? 0.55 : (row.locked ? 0.7 : 1.0)
 
         Behavior on color { ColorAnimation { duration: 150 } }
@@ -79,7 +81,7 @@ Item {
             width: 16
             height: 16
             radius: 8
-            color: "#ffffff"
+            color: row.theme ? row.theme.knob : "#ffffff"
             anchors.verticalCenter: parent.verticalCenter
             x: row.on ? parent.width - width - 3 : 3
 

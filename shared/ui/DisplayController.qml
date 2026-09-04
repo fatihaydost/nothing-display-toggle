@@ -9,7 +9,8 @@ import org.kde.plasma.plasma5support as P5Support
 Item {
     id: ctl
 
-    visible: false
+    // Nothing to draw and no size. Deliberately not visible:false — that would
+    // make the Theme child resolve every Kirigami colour to black.
     implicitWidth: 0
     implicitHeight: 0
 
@@ -21,6 +22,23 @@ Item {
     // false until kscreen-doctor has answered once, so callers can keep the
     // "no output found" line hidden at startup instead of flashing it
     property bool queried: false
+
+    // connector -> name the user typed in the settings; empty means "use the type"
+    property var customNames: ({})
+    onCustomNamesChanged: _applyLabels()
+
+    // what the settings page offers to rename: [{conn, auto}], as JSON so the
+    // applet can hand it to its config through a plain string entry
+    property string outputsJson: "[]"
+
+    // ── theme ─────────────────────────────────────────────────────────────
+    property alias themeName: uiTheme.name
+    readonly property alias theme: uiTheme
+
+    Theme {
+        id: uiTheme
+        dotFamily: ctl.uiFont
+    }
 
     // ── type tokens ───────────────────────────────────────────────────────
     // Two static faces baked out of the Doto variable font at ROND=100, one per
@@ -169,6 +187,37 @@ Item {
         }
     }
 
+    // Name every row: the connector type, numbered when several share it, unless
+    // the user gave that connector a name of their own. Kept as its own pass so a
+    // rename lands immediately instead of waiting for the next poll.
+    function _applyLabels() {
+        var totals = {};
+        var i;
+        for (i = 0; i < outputModel.count; i++) {
+            var tn = _typeName(outputModel.get(i).type);
+            totals[tn] = (totals[tn] || 0) + 1;
+        }
+
+        var seen = {};
+        var known = [];
+        var custom = ctl.customNames || ({});
+        for (i = 0; i < outputModel.count; i++) {
+            var o = outputModel.get(i);
+            var auto = _typeName(o.type);
+            if (totals[auto] > 1) {
+                seen[auto] = (seen[auto] || 0) + 1;
+                auto = auto + " " + seen[auto];
+            }
+            var given = custom[o.conn];
+            var label = (given && given.length > 0) ? given : auto;
+            if (o.label !== label) outputModel.setProperty(i, "label", label);
+            known.push({ conn: o.conn, auto: auto });
+        }
+
+        var json = JSON.stringify(known);
+        if (json !== ctl.outputsJson) ctl.outputsJson = json;
+    }
+
     // libkscreen Output::Type -> short label
     function _typeName(t) {
         switch (t) {
@@ -208,28 +257,15 @@ Item {
             return; // malformed output: keep the last known state
         }
 
-        // number them when several outputs share the same type
-        var totals = {};
-        for (var a = 0; a < list.length; a++) {
-            var tn = _typeName(list[a].type);
-            totals[tn] = (totals[tn] || 0) + 1;
-        }
-        var seen = {};
-        for (var b = 0; b < list.length; b++) {
-            var name = _typeName(list[b].type);
-            if (totals[name] > 1) {
-                seen[name] = (seen[name] || 0) + 1;
-                list[b].label = name + " " + seen[name];
-            } else {
-                list[b].label = name;
-            }
-        }
-
         var sig = list.map(function (x) { return x.conn; }).join(",");
         if (sig !== ctl._signature) {
             ctl._signature = sig;
             outputModel.clear();
-            for (var c = 0; c < list.length; c++) outputModel.append(list[c]);
+            for (var c = 0; c < list.length; c++) {
+                list[c].label = "";
+                outputModel.append(list[c]);
+            }
+            _applyLabels();
         } else {
             // same set: update states in place instead of resetting the model
             for (var d = 0; d < list.length && d < outputModel.count; d++) {

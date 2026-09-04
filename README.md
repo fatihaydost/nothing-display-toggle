@@ -41,9 +41,42 @@ which ones are live, and refuses to let you turn off the last one.
   the cursor turns to "not allowed". There is no way to reach a state with no screen on.
 - **Always tells the truth.** State is re-read every 4 seconds, so the widget stays correct even
   when you change displays from System Settings, a keyboard shortcut, or another script.
-- **Nothing OS styling.** Dot-matrix type, red accents, a status dot that pings like radar while
-  any display is live, and a bottom strip whose lit fraction is the fraction of displays that
-  are on.
+- **Call your displays what you call them.** Rename any output from the settings — `Desk`, `TV`,
+  `Left` — instead of living with `HDMI 2`. Names are keyed to the connector, so they come back
+  when you plug the same display in again.
+- **Four looks.** Nothing, Classic KDE, Minimal, Neon. Colours and typefaces change; sizes,
+  spacing and motion do not.
+- **Nothing OS styling by default.** Dot-matrix type, red accents, a status dot that pings like
+  radar while any display is live, and a bottom strip whose lit fraction is the fraction of
+  displays that are on.
+
+## Four looks
+
+<img src="docs/themes.png" width="720" alt="The same card in the Nothing, Classic KDE, Minimal and Neon looks">
+
+Right-click → **Configure… → Appearance**. Only colours and typefaces change between them —
+sizes, spacing, radii and motion are identical, so the widget stays one design rather than four.
+Both widgets carry the same four.
+
+| | Colour | Type |
+|---|---|---|
+| **Nothing** (default) | Red on near-black | The bundled dot-matrix face |
+| **Classic KDE** | Your desktop palette, accent included; follows light and dark | Your interface font |
+| **Minimal** | None. A switched-on display is simply brighter than a switched-off one | Your interface font |
+| **Neon** | Aqua and magenta on black | Monospace |
+
+Minimal is dark like the others on purpose: the panel widget draws straight onto the panel,
+where a light palette would disappear.
+
+## Naming your displays
+
+Right-click → **Configure… → Displays** gives every connected output a text field. Type
+`Desk`, `TV`, `Left` — whatever you actually call it — and the row uses that instead of
+`HDMI 2`. Empty a field to go back to the name the widget works out on its own, which is shown
+in grey as the placeholder.
+
+Names are keyed to the connector (`HDMI-A-1`, `eDP-1`), so they survive reboots and come back
+when you plug the same display in again. The connector itself is still shown under the name.
 
 ## On the panel
 
@@ -139,8 +172,7 @@ kpackagetool6 --type Plasma/Applet --remove io.github.fatihaydost.displaytoggle.
 
 ## How it works
 
-There is no daemon, no config file of its own, and nothing running in the background beyond a
-4-second poll. State is read from `kscreen-doctor -j`, and a toggle runs exactly one command:
+There is no daemon and nothing running in the background beyond a 4-second poll. State is read from `kscreen-doctor -j`, and a toggle runs exactly one command:
 
 ```bash
 kscreen-doctor output.<connector>.disable   # or .enable
@@ -156,13 +188,18 @@ still a single self-contained applet.
 
 ```
 shared/ui/   DisplayController.qml   kscreen polling, toggles, output naming
+             Theme.qml               the four palettes and typefaces
+             ConfigTheme.qml         the Appearance settings page
+             ConfigDisplays.qml      the Displays (renaming) settings page
              DisplayCard.qml         the card (desktop widget, and the panel popup)
              ToggleRow.qml           one row inside the card
              StatusDot.qml           the pinging red dot
 desktop/     main.qml                shows the card
+             contents/config/        which settings pages to show
 tools/       make-fonts.py           bakes the two static faces from the variable font
              Doto-VariableFont.ttf   the upstream variable font, kept to re-bake from
 panel/       main.qml                picks the mode, owns the popup
+             configGeneral.qml       the Panel settings page
              PanelCompact.qml        holds both panel forms, shows one
              PanelStrip.qml          a switch per display, directly on the panel
              PanelBadge.qml          dot + on/total count

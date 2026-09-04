@@ -12,8 +12,27 @@ PlasmoidItem {
     toolTipMainText: "Displays"
     toolTipSubText: ctl.enabledCount + " of " + ctl.outputs.count + " switched on"
 
+    // settings -> controller
+    readonly property var customNames: {
+        try {
+            return JSON.parse(Plasmoid.configuration.outputNames || "{}");
+        } catch (e) {
+            return ({});
+        }
+    }
+
     DisplayController {
         id: ctl
+
+        themeName: Plasmoid.configuration.theme
+        customNames: root.customNames
+
+        // hand the settings page the list of connectors it can rename
+        onOutputsJsonChanged: {
+            if (Plasmoid.configuration.knownOutputs !== outputsJson) {
+                Plasmoid.configuration.knownOutputs = outputsJson;
+            }
+        }
     }
 
     fullRepresentation: DisplayCard {
