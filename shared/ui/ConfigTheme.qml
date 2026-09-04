@@ -3,12 +3,25 @@ import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
+import org.kde.kquickcontrols as KQC
 
 KCM.SimpleKCM {
     id: page
 
     property string cfg_theme
     property string cfg_themeDefault: "nothing"
+    property string cfg_accentColor
+    property string cfg_accentColorDefault: ""
+
+    // what the colour button should show: the user's pick, or the look's own accent
+    readonly property color effectiveAccent: page.cfg_accentColor.length > 0
+                                             ? page.cfg_accentColor
+                                             : liveTheme.themeAccent
+
+    Theme {
+        id: liveTheme
+        name: page.cfg_theme
+    }
 
     // background / accent / text of one theme, so the choice is visible here
     component Swatch: Item {
@@ -97,8 +110,36 @@ KCM.SimpleKCM {
 
         Item { Kirigami.FormData.isSection: true }
 
+        RowLayout {
+            Kirigami.FormData.label: i18n("Accent colour:")
+            spacing: Kirigami.Units.smallSpacing
+
+            KQC.ColorButton {
+                id: accentButton
+                showAlphaChannel: false
+                dialogTitle: i18n("Accent colour")
+                color: page.effectiveAccent
+                onAccepted: (picked) => page.cfg_accentColor = picked.toString()
+            }
+
+            QQC2.Button {
+                text: i18n("Use the look's own")
+                enabled: page.cfg_accentColor.length > 0
+                icon.name: "edit-undo-symbolic"
+                onClicked: page.cfg_accentColor = ""
+            }
+        }
+
         Hint {
-            text: i18n("Only colours and typefaces change. Sizes, spacing and motion stay the same in every look.")
+            text: page.cfg_accentColor.length > 0
+                  ? i18n("Your colour, on top of the chosen look. Everything the widget paints in colour follows it: the switches, the bar beside each name and the status dot.")
+                  : i18n("Following the chosen look. Pick a colour to override it.")
+        }
+
+        Item { Kirigami.FormData.isSection: true }
+
+        Hint {
+            text: i18n("Only colours and typefaces change between looks. Sizes, spacing and motion stay the same in every one.")
         }
     }
 }

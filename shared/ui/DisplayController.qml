@@ -33,6 +33,7 @@ Item {
 
     // ── theme ─────────────────────────────────────────────────────────────
     property alias themeName: uiTheme.name
+    property alias accentOverride: uiTheme.accentOverride
     readonly property alias theme: uiTheme
 
     Theme {

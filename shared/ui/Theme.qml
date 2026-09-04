@@ -16,6 +16,8 @@ Item {
     property string name: "nothing"
     // the bundled dot-matrix family, resolved by DisplayController
     property string dotFamily: "monospace"
+    // empty means "use the accent this look ships with"
+    property string accentOverride: ""
 
     readonly property bool isKde: name === "kde"
     readonly property bool isMinimal: name === "minimal"
@@ -35,8 +37,6 @@ Item {
                                 Kirigami.Theme.textColor.b, 0.16),
             trackOff:   Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
                                 Kirigami.Theme.textColor.b, 0.22),
-            dotOff:     Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
-                                Kirigami.Theme.textColor.b, 0.18),
             danger:     Kirigami.Theme.negativeTextColor
         }
         // no colour at all: the "on" state is simply brighter than the "off" one.
@@ -49,7 +49,6 @@ Item {
             knob:       "#141414",
             divider:    "#272727",
             trackOff:   "#2c2c2c",
-            dotOff:     "#2c2c2c",
             danger:     "#9a9a96"
         }
         if (isNeon) return {
@@ -59,7 +58,6 @@ Item {
             knob:       "#05060f",
             divider:    "#14243d",
             trackOff:   "#14243d",
-            dotOff:     "#14243d",
             danger:     "#ff3ea5"
         }
         return {
@@ -69,18 +67,17 @@ Item {
             knob:       "#ffffff",
             divider:    "#2e2e2e",
             trackOff:   "#333333",
-            dotOff:     "#333333",
             danger:     "#ff4444"
         }
     }
 
     readonly property color background: palette.background
-    readonly property color accent: palette.accent
+    readonly property color themeAccent: palette.accent
+    readonly property color accent: accentOverride.length > 0 ? accentOverride : themeAccent
     readonly property color onSurface: palette.onSurface
     readonly property color knob: palette.knob
     readonly property color divider: palette.divider
     readonly property color trackOff: palette.trackOff
-    readonly property color dotOff: palette.dotOff
     readonly property color danger: palette.danger
 
     readonly property string fontFamily: isKde || isMinimal

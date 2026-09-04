@@ -28,7 +28,7 @@ which ones are live, and refuses to let you turn off the last one.
 | All displays on | One display switched off | Four displays connected |
 |:---:|:---:|:---:|
 | <img src="docs/hero.png" width="260" alt="Two displays, both on"> | <img src="docs/state-off.png" width="260" alt="Laptop panel off, its toggle reads SLEEPING"> | <img src="docs/state-multi.png" width="260" alt="Four displays with two HDMI outputs numbered"> |
-| The counter reads `2/2` and the strip along the bottom is fully lit. | The laptop panel reads `SLEEPING`. The remaining display's switch dims — it is the last one on and cannot be turned off. | Rows appear per output. Two HDMI monitors are numbered `HDMI 1` / `HDMI 2`; the counter reads `3/4`. |
+| The counter reads `2/2` and both switches are lit. | The laptop panel reads `SLEEPING`. The remaining display's switch dims — it is the last one on and cannot be turned off. | Rows appear per output. Two HDMI monitors are numbered `HDMI 1` / `HDMI 2`; the counter reads `3/4`. |
 
 ## Features
 
@@ -46,9 +46,8 @@ which ones are live, and refuses to let you turn off the last one.
   when you plug the same display in again.
 - **Four looks.** Nothing, Classic KDE, Minimal, Neon. Colours and typefaces change; sizes,
   spacing and motion do not.
-- **Nothing OS styling by default.** Dot-matrix type, red accents, a status dot that pings like
-  radar while any display is live, and a bottom strip whose lit fraction is the fraction of
-  displays that are on.
+- **Nothing OS styling by default.** Dot-matrix type, red accents, and a status dot that pings
+  like radar while any display is live.
 
 ## Four looks
 
@@ -67,6 +66,13 @@ Both widgets carry the same four.
 
 Minimal is dark like the others on purpose: the panel widget draws straight onto the panel,
 where a light palette would disappear.
+
+### Your own colour
+
+Under the four looks there is a colour button. Pick anything and it replaces that look's accent
+— the switches, the bar beside each name and the status dot all follow it, in both widgets.
+**Use the look's own** puts it back. The rest of the palette stays with the look, so a colour
+sits on top of a design rather than replacing it.
 
 ## Naming your displays
 
@@ -136,6 +142,12 @@ git clone https://github.com/fatihaydost/nothing-display-toggle.git
 cd nothing-display-toggle
 ./install.sh          # builds and installs both
 ```
+
+> **Upgrading a widget that is already on screen?** Plasma loads an applet's QML once and keeps
+> it for the life of the shell, so the copy you are looking at goes on running the old code
+> until Plasma restarts. This is easy to misread, because the settings dialog *is* read fresh
+> from disk: new settings pages appear while the widget itself ignores them. Run
+> `./install.sh --reload`, or `systemctl --user restart plasma-plasmashell.service`.
 
 Then right-click the **desktop** → **Add Widgets…** → drag *Nothing Display Toggle* out, or
 right-click the **panel** → **Add Widgets…** → *Nothing Display Toggle (Panel)*.

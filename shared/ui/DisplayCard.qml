@@ -13,7 +13,7 @@ Item {
     readonly property int rowCount: Math.max(1, controller ? controller.outputs.count : 0)
 
     implicitWidth: 220
-    implicitHeight: 57 * rowCount + 49 + 2 * margin
+    implicitHeight: 57 * rowCount + 35 + 2 * margin
 
     Rectangle {
         anchors.fill: parent
@@ -110,31 +110,6 @@ Item {
                 font.letterSpacing: card.theme ? card.theme.labelSpacing : 1.5
                 font.family: card.theme ? card.theme.fontFamily : "monospace"
                 wrapMode: Text.WordWrap
-            }
-
-            // ── dot-matrix strip ──────────────────────────────────────
-            Row {
-                width: parent.width
-                height: 6
-                spacing: Math.max(0, (parent.width - (12 * 6)) / 11)
-
-                Repeater {
-                    model: 12
-
-                    delegate: Rectangle {
-                        width: 6
-                        height: 6
-                        radius: 3
-                        // lit fraction of the strip = fraction of outputs that are on
-                        color: card.controller && card.controller.outputs.count > 0
-                               && index < Math.round(12 * card.controller.enabledCount
-                                                     / card.controller.outputs.count)
-                               ? (card.theme ? card.theme.accent : "#ff4444")
-                               : (card.theme ? card.theme.dotOff : "#333333")
-                        opacity: 0.9
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                    }
-                }
             }
         }
     }
