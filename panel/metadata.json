@@ -1,4 +1,5 @@
 {
+    "KPackageStructure": "Plasma/Applet",
     "KPlugin": {
         "Authors": [
             {
@@ -7,17 +8,16 @@
             }
         ],
         "Category": "System Information",
-        "Description": "Turn each connected display on or off from the desktop, in a Nothing OS inspired style",
+        "Description": "Switch each connected display on or off from the panel, in a Nothing OS inspired style",
         "EnabledByDefault": true,
         "Icon": "/icon.png",
-        "Id": "io.github.fatihaydost.displaytoggle",
+        "Id": "io.github.fatihaydost.displaytoggle.panel",
         "License": "GPL-3.0-or-later",
-        "Name": "Nothing Display Toggle",
-        "Version": "1.0",
+        "Name": "Nothing Display Toggle (Panel)",
+        "Version": "1.0.2",
         "Website": "https://github.com/fatihaydost/nothing-display-toggle"
     },
-    "KPackageStructure": "Plasma/Applet",
-    "X-Plasma-API-Minimum-Version": "6.0",
     "X-Plasma-API": "declarativeappletscript",
+    "X-Plasma-API-Minimum-Version": "6.0",
     "X-Plasma-MainScript": "ui/main.qml"
 }

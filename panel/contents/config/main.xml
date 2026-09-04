@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name="" />
+  <group name="General">
+    <!-- auto | inline | popup -->
+    <entry name="panelMode" type="String">
+      <default>auto</default>
+    </entry>
+    <!-- in "auto": switch to a badge above this many displays -->
+    <entry name="inlineThreshold" type="Int">
+      <default>2</default>
+    </entry>
+  </group>
+</kcfg>

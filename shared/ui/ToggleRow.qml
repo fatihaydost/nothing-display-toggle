@@ -6,8 +6,6 @@ Item {
     property string title: ""
     property string connector: ""
     property string fontFamily: ""
-    property var axesTitle: ({})
-    property var axesText: ({})
     property bool on: true
     property bool busy: false
     // last enabled output cannot be switched off
@@ -49,7 +47,7 @@ Item {
             opacity: row.on ? 1.0 : 0.45
             font.pixelSize: 17
             font.family: row.fontFamily
-            font.variableAxes: row.axesTitle
+            font.weight: Font.Medium
 
             Behavior on opacity { NumberAnimation { duration: 150 } }
         }
@@ -61,7 +59,6 @@ Item {
             font.pixelSize: 9
             font.letterSpacing: 1.5
             font.family: row.fontFamily
-            font.variableAxes: row.axesText
         }
     }
 
