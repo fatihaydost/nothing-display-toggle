@@ -12,11 +12,14 @@ KCM.SimpleKCM {
     property string cfg_themeDefault: "nothing"
     property string cfg_accentColor
     property string cfg_accentColorDefault: ""
+    property string cfg_backgroundColor
+    property string cfg_backgroundColorDefault: ""
+    property string cfg_textColor
+    property string cfg_textColorDefault: ""
 
-    // what the colour button should show: the user's pick, or the look's own accent
-    readonly property color effectiveAccent: page.cfg_accentColor.length > 0
-                                             ? page.cfg_accentColor
-                                             : liveTheme.themeAccent
+    readonly property bool anyColourSet: cfg_accentColor.length > 0
+                                         || cfg_backgroundColor.length > 0
+                                         || cfg_textColor.length > 0
 
     Theme {
         id: liveTheme
@@ -110,30 +113,48 @@ KCM.SimpleKCM {
 
         Item { Kirigami.FormData.isSection: true }
 
-        RowLayout {
-            Kirigami.FormData.label: i18n("Accent colour:")
-            spacing: Kirigami.Units.smallSpacing
+        KQC.ColorButton {
+            Kirigami.FormData.label: i18n("Accent:")
+            showAlphaChannel: false
+            dialogTitle: i18n("Accent colour")
+            color: page.cfg_accentColor.length > 0 ? page.cfg_accentColor
+                                                   : liveTheme.themeAccent
+            onAccepted: (picked) => page.cfg_accentColor = picked.toString()
+        }
 
-            KQC.ColorButton {
-                id: accentButton
-                showAlphaChannel: false
-                dialogTitle: i18n("Accent colour")
-                color: page.effectiveAccent
-                onAccepted: (picked) => page.cfg_accentColor = picked.toString()
-            }
+        KQC.ColorButton {
+            Kirigami.FormData.label: i18n("Background:")
+            showAlphaChannel: false
+            dialogTitle: i18n("Background colour")
+            color: page.cfg_backgroundColor.length > 0 ? page.cfg_backgroundColor
+                                                       : liveTheme.themeBackground
+            onAccepted: (picked) => page.cfg_backgroundColor = picked.toString()
+        }
 
-            QQC2.Button {
-                text: i18n("Use the look's own")
-                enabled: page.cfg_accentColor.length > 0
-                icon.name: "edit-undo-symbolic"
-                onClicked: page.cfg_accentColor = ""
+        KQC.ColorButton {
+            Kirigami.FormData.label: i18n("Text:")
+            showAlphaChannel: false
+            dialogTitle: i18n("Text colour")
+            color: page.cfg_textColor.length > 0 ? page.cfg_textColor
+                                                 : liveTheme.themeText
+            onAccepted: (picked) => page.cfg_textColor = picked.toString()
+        }
+
+        QQC2.Button {
+            text: i18n("Back to the look's own colours")
+            enabled: page.anyColourSet
+            icon.name: "edit-undo-symbolic"
+            onClicked: {
+                page.cfg_accentColor = "";
+                page.cfg_backgroundColor = "";
+                page.cfg_textColor = "";
             }
         }
 
         Hint {
-            text: page.cfg_accentColor.length > 0
-                  ? i18n("Your colour, on top of the chosen look. Everything the widget paints in colour follows it: the switches, the bar beside each name and the status dot.")
-                  : i18n("Following the chosen look. Pick a colour to override it.")
+            text: page.anyColourSet
+                  ? i18n("Your colours, on top of the chosen look. Dividers, the switch track and the knob are worked out from them, so nothing is left behind.")
+                  : i18n("Following the chosen look. Set any of the three to override it.")
         }
 
         Item { Kirigami.FormData.isSection: true }

@@ -1,6 +1,10 @@
 // Colour and type tokens for the four looks. Only colours and typefaces change
 // between them — sizes, spacing, radii and motion are the same everywhere, so
 // the widget stays one design rather than four.
+//
+// Three colours can be overridden from the settings: accent, background and
+// text. Everything else is derived from them, so an override stays coherent
+// instead of leaving hardcoded colours behind.
 import QtQuick
 import org.kde.kirigami as Kirigami
 
@@ -14,10 +18,15 @@ Item {
 
     // "nothing" | "kde" | "minimal" | "neon"
     property string name: "nothing"
-    // the bundled dot-matrix family, resolved by DisplayController
+
+    // bundled families, resolved by DisplayController
     property string dotFamily: "monospace"
-    // empty means "use the accent this look ships with"
+    property string elegantFamily: "monospace"
+
+    // empty means "use what this look ships with"
     property string accentOverride: ""
+    property string backgroundOverride: ""
+    property string textOverride: ""
 
     readonly property bool isKde: name === "kde"
     readonly property bool isMinimal: name === "minimal"
@@ -32,12 +41,11 @@ Item {
             background: Kirigami.Theme.backgroundColor,
             accent:     Kirigami.Theme.highlightColor,
             onSurface:  Kirigami.Theme.textColor,
-            knob:       Kirigami.Theme.backgroundColor,
-            divider:    Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
-                                Kirigami.Theme.textColor.b, 0.16),
-            trackOff:   Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
-                                Kirigami.Theme.textColor.b, 0.22),
-            danger:     Kirigami.Theme.negativeTextColor
+            danger:     Kirigami.Theme.negativeTextColor,
+            dividerMix: 0.16,
+            trackMix:   0.22,
+            knobIsBackground: true,
+            dangerIsAccent: false
         }
         // no colour at all: the "on" state is simply brighter than the "off" one.
         // Kept dark like the others because the panel forms draw straight onto the
@@ -46,47 +54,67 @@ Item {
             background: "#141414",
             accent:     "#e8e8e6",
             onSurface:  "#f2f2f0",
-            knob:       "#141414",
-            divider:    "#272727",
-            trackOff:   "#2c2c2c",
-            danger:     "#9a9a96"
+            danger:     "#9a9a96",
+            dividerMix: 0.086,
+            trackMix:   0.108,
+            knobIsBackground: true,
+            dangerIsAccent: false
         }
         if (isNeon) return {
             background: "#05060f",
             accent:     "#00f5d4",
             onSurface:  "#d7fff7",
-            knob:       "#05060f",
-            divider:    "#14243d",
-            trackOff:   "#14243d",
-            danger:     "#ff3ea5"
+            danger:     "#ff3ea5",
+            dividerMix: 0.12,
+            trackMix:   0.12,
+            knobIsBackground: true,
+            dangerIsAccent: false
         }
         return {
             background: "#1a1a1a",
             accent:     "#ff4444",
             onSurface:  "#ffffff",
-            knob:       "#ffffff",
-            divider:    "#2e2e2e",
-            trackOff:   "#333333",
-            danger:     "#ff4444"
+            danger:     "#ff4444",
+            dividerMix: 0.087,
+            trackMix:   0.109,
+            knobIsBackground: false,
+            dangerIsAccent: true
         }
     }
 
-    readonly property color background: palette.background
+    // ── the three the user can set ────────────────────────────────────────
     readonly property color themeAccent: palette.accent
+    readonly property color themeBackground: palette.background
+    readonly property color themeText: palette.onSurface
+
     readonly property color accent: accentOverride.length > 0 ? accentOverride : themeAccent
-    readonly property color onSurface: palette.onSurface
-    readonly property color knob: palette.knob
-    readonly property color divider: palette.divider
-    readonly property color trackOff: palette.trackOff
-    readonly property color danger: palette.danger
+    readonly property color background: backgroundOverride.length > 0
+                                        ? backgroundOverride : themeBackground
+    readonly property color onSurface: textOverride.length > 0 ? textOverride : themeText
 
-    readonly property string fontFamily: isKde || isMinimal
-                                         ? Kirigami.Theme.defaultFont.family
-                                         : isNeon ? "monospace" : dotFamily
+    // ── derived from those, so an override carries all the way through ────
+    // Opaque rather than translucent: the panel forms draw onto the panel, not
+    // onto the card, where a translucent track would show the panel through.
+    function _blend(fg, bg, amount) {
+        return Qt.rgba(bg.r + (fg.r - bg.r) * amount,
+                       bg.g + (fg.g - bg.g) * amount,
+                       bg.b + (fg.b - bg.b) * amount,
+                       1.0);
+    }
 
-    // the dot-matrix and monospace faces want air; a UI face does not
-    readonly property real headerSpacing: isKde ? 1.0 : isMinimal ? 1.6 : 3.0
-    readonly property real labelSpacing: isKde ? 0.4 : isMinimal ? 0.8 : 1.5
+    readonly property color divider: _blend(onSurface, background, palette.dividerMix)
+    readonly property color trackOff: _blend(onSurface, background, palette.trackMix)
+    readonly property color knob: palette.knobIsBackground ? background : onSurface
+    readonly property color danger: palette.dangerIsAccent ? accent : palette.danger
+
+    // ── type ──────────────────────────────────────────────────────────────
+    readonly property string fontFamily: isKde ? Kirigami.Theme.defaultFont.family
+                                       : isMinimal ? elegantFamily
+                                       : isNeon ? "monospace" : dotFamily
+
+    // the dot-matrix, geometric and monospace faces want air; a UI face does not
+    readonly property real headerSpacing: isKde ? 1.0 : isMinimal ? 2.2 : 3.0
+    readonly property real labelSpacing: isKde ? 0.4 : isMinimal ? 1.0 : 1.5
     readonly property int titleWeight: isKde ? Font.DemiBold
                                      : isMinimal ? Font.Normal
                                      : isNeon ? Font.Bold : Font.Medium

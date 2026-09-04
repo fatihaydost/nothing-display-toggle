@@ -20,6 +20,12 @@
     <entry name="accentColor" type="String">
       <default></default>
     </entry>
+    <entry name="backgroundColor" type="String">
+      <default></default>
+    </entry>
+    <entry name="textColor" type="String">
+      <default></default>
+    </entry>
     <!-- connector -> the name the user typed, as JSON -->
     <entry name="outputNames" type="String">
       <default>{}</default>

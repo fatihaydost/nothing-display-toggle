@@ -25,6 +25,8 @@ PlasmoidItem {
 
         themeName: Plasmoid.configuration.theme
         accentOverride: Plasmoid.configuration.accentColor
+        backgroundOverride: Plasmoid.configuration.backgroundColor
+        textOverride: Plasmoid.configuration.textColor
         customNames: root.customNames
 
         // hand the settings page the list of connectors it can rename

@@ -61,18 +61,22 @@ Both widgets carry the same four.
 |---|---|---|
 | **Nothing** (default) | Red on near-black | The bundled dot-matrix face |
 | **Classic KDE** | Your desktop palette, accent included; follows light and dark | Your interface font |
-| **Minimal** | None. A switched-on display is simply brighter than a switched-off one | Your interface font |
+| **Minimal** | None. A switched-on display is simply brighter than a switched-off one | Jost Book, a quiet geometric face |
 | **Neon** | Aqua and magenta on black | Monospace |
 
 Minimal is dark like the others on purpose: the panel widget draws straight onto the panel,
 where a light palette would disappear.
 
-### Your own colour
+### Your own colours
 
-Under the four looks there is a colour button. Pick anything and it replaces that look's accent
-— the switches, the bar beside each name and the status dot all follow it, in both widgets.
-**Use the look's own** puts it back. The rest of the palette stays with the look, so a colour
-sits on top of a design rather than replacing it.
+Under the four looks there are three colour buttons — **accent**, **background** and **text** —
+and any of them can be left alone. What you set replaces that part of the look; everything else
+is worked out from it. Dividers, the switch track and the knob are blended from your background
+and text rather than kept as fixed colours, so there is nothing left behind: put a pale
+background on the Nothing look and the row separators, the off-state switch and its knob all
+come along.
+
+**Back to the look's own colours** clears all three.
 
 ## Naming your displays
 
@@ -200,7 +204,7 @@ still a single self-contained applet.
 
 ```
 shared/ui/   DisplayController.qml   kscreen polling, toggles, output naming
-             Theme.qml               the four palettes and typefaces
+             Theme.qml               the four palettes, the colour overrides, the typefaces
              ConfigTheme.qml         the Appearance settings page
              ConfigDisplays.qml      the Displays (renaming) settings page
              DisplayCard.qml         the card (desktop widget, and the panel popup)
@@ -208,8 +212,9 @@ shared/ui/   DisplayController.qml   kscreen polling, toggles, output naming
              StatusDot.qml           the pinging red dot
 desktop/     main.qml                shows the card
              contents/config/        which settings pages to show
-tools/       make-fonts.py           bakes the two static faces from the variable font
-             Doto-VariableFont.ttf   the upstream variable font, kept to re-bake from
+tools/       make-fonts.py           bakes the static faces from the variable sources
+             Doto-VariableFont.ttf   upstream, kept so the faces can be re-baked
+             Jost-VariableFont.ttf   upstream, kept so the faces can be re-baked
 panel/       main.qml                picks the mode, owns the popup
              configGeneral.qml       the Panel settings page
              PanelCompact.qml        holds both panel forms, shows one
@@ -232,10 +237,15 @@ panel/       main.qml                picks the mode, owns the popup
 ## The font
 
 The dot-matrix face is [**Doto**](https://github.com/oliverlalan/Doto) by the Doto Project
-Authors, licensed under the [SIL Open Font License 1.1](shared/fonts/OFL.txt). Doto declares no
-Reserved Font Name, so the two faces the widget needs are baked out of it and shipped as static
-files under the family **Doto Round**: `tools/make-fonts.py` pins `ROND=100` (fully round dots)
-at weights 400 and 500.
+Authors, licensed under the [SIL Open Font License 1.1](shared/fonts/OFL-Doto.txt). Doto
+declares no Reserved Font Name, so the two faces the widget needs are baked out of it and shipped
+as static files under the family **Doto Round**: `tools/make-fonts.py` pins `ROND=100` (fully
+round dots) at weights 400 and 500.
+
+The Minimal look uses [**Jost**](https://github.com/indestructible-type/Jost) by the Jost Project
+Authors, also [OFL 1.1](shared/fonts/OFL-Jost.txt) and also without a Reserved Font Name, baked
+the same way at weight 350 — between Light and Regular, airy at 17px and still solid at 9px —
+and shipped as **Jost Book**.
 
 Baking is not a preference. Doto's round-dot look exists only as a point on the `ROND` axis —
 all nine of its named instances sit at `ROND=0` — and asking for the axis at runtime through

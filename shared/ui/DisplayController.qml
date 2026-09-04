@@ -34,11 +34,14 @@ Item {
     // ── theme ─────────────────────────────────────────────────────────────
     property alias themeName: uiTheme.name
     property alias accentOverride: uiTheme.accentOverride
+    property alias backgroundOverride: uiTheme.backgroundOverride
+    property alias textOverride: uiTheme.textOverride
     readonly property alias theme: uiTheme
 
     Theme {
         id: uiTheme
         dotFamily: ctl.uiFont
+        elegantFamily: ctl.elegantFont
     }
 
     // ── type tokens ───────────────────────────────────────────────────────
@@ -49,6 +52,9 @@ Item {
     // Both files register the same family; font.weight picks the face.
     readonly property string uiFont: dotRegular.status === FontLoader.Ready
                                      ? dotRegular.name : "monospace"
+    // the quiet geometric face the Minimal look uses
+    readonly property string elegantFont: elegantFace.status === FontLoader.Ready
+                                          ? elegantFace.name : "sans-serif"
 
     // the toggle we are waiting for kscreen to actually apply
     property string _pendingConn: ""
@@ -83,6 +89,11 @@ Item {
     FontLoader {
         id: dotMedium
         source: Qt.resolvedUrl("../fonts/Doto-Round-Medium.ttf")
+    }
+
+    FontLoader {
+        id: elegantFace
+        source: Qt.resolvedUrl("../fonts/Jost-Book.ttf")
     }
 
     ListModel {
