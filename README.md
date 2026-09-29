@@ -4,6 +4,12 @@
 
 **Switch any display on or off in one click, from the desktop or the panel.**
 
+[![Release](https://img.shields.io/github/v/release/fatihaydost/nothing-display-toggle?label=release&color=ff4444)](https://github.com/fatihaydost/nothing-display-toggle/releases/latest)
+[![KDE Store](https://img.shields.io/badge/KDE%20Store-get%20it-1d99f3?logo=kde&logoColor=white)](https://store.kde.org/p/2376129/)
+[![Plasma 6](https://img.shields.io/badge/Plasma-6-1d99f3?logo=kdeplasma&logoColor=white)](https://kde.org/plasma-desktop/)
+![Wayland | X11](https://img.shields.io/badge/Wayland%20%7C%20X11-supported-555555)
+[![License](https://img.shields.io/github/license/fatihaydost/nothing-display-toggle?color=4c1)](LICENSE)
+
 A KDE Plasma 6 widget in the style of Nothing OS.
 
 <img src="docs/hero.png" width="320" alt="The widget on a black desktop: two displays, both switched on">
