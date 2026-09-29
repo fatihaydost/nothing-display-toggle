@@ -43,6 +43,10 @@ On a panel:
 Needs KDE Plasma 6, on Wayland or X11. It relies on `kscreen-doctor` and the `plasma5support`
 QML module, and both normally come with Plasma.
 
+**From the KDE Store.** Right-click the desktop → **Add Widgets…** → **Get New Widgets…** →
+**Download New Plasma Widgets**, and search for *Nothing Display Toggle*. It is also on the
+[KDE Store](https://store.kde.org/p/2376129/).
+
 **From a release.** Download `nothing-display-toggle.plasmoid` from
 [Releases](https://github.com/fatihaydost/nothing-display-toggle/releases), then run:
 
