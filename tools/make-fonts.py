@@ -9,7 +9,7 @@ Two reasons nothing is applied at runtime:
     glyphs inside plasmashell — right face, right letter count, wrong characters.
 
 Neither font declares a Reserved Font Name, so instancing and renaming them is
-allowed. Both licences travel with the packages as shared/fonts/OFL-*.txt.
+allowed. Both licences travel with the package as package/contents/fonts/OFL-*.txt.
 
 Needs fonttools:  python3 -m venv .venv && .venv/bin/pip install fonttools
 Usage:            .venv/bin/python tools/make-fonts.py
@@ -21,7 +21,7 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-OUT = ROOT / "shared" / "fonts"
+OUT = ROOT / "package" / "contents" / "fonts"
 
 WINDOWS_ENGLISH = dict(platformID=3, platEncID=1, langID=0x409)
 MAC_ENGLISH = dict(platformID=1, platEncID=0, langID=0)

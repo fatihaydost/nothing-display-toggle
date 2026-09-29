@@ -7,9 +7,14 @@ Item {
     property string title: ""
     property string connector: ""
     property bool on: true
+    // this row's own toggle is in flight
     property bool busy: false
+    // another row's toggle is in flight: clicks here are ignored until it lands
+    property bool blocked: false
     // last enabled output cannot be switched off
     property bool locked: false
+    // kscreen refused the last toggle on this row
+    property bool failed: false
 
     signal toggled()
 
@@ -17,8 +22,9 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        cursorShape: row.locked ? Qt.ForbiddenCursor : Qt.PointingHandCursor
-        onClicked: if (!row.locked) row.toggled()
+        cursorShape: row.locked ? Qt.ForbiddenCursor
+                   : row.blocked ? Qt.ArrowCursor : Qt.PointingHandCursor
+        onClicked: if (!row.locked && !row.blocked) row.toggled()
     }
 
     // accent bar
@@ -35,13 +41,19 @@ Item {
         Behavior on opacity { NumberAnimation { duration: 150 } }
     }
 
+    // bounded on the right by the switch, so a long name is cut with an
+    // ellipsis instead of running underneath it
     Column {
         anchors.left: bar.right
         anchors.leftMargin: 9
+        anchors.right: track.left
+        anchors.rightMargin: 8
         anchors.verticalCenter: parent.verticalCenter
         spacing: -1
 
         Text {
+            width: parent.width
+            elide: Text.ElideRight
             text: row.title
             color: row.theme ? row.theme.onSurface : "#ffffff"
             opacity: row.on ? 1.0 : 0.45
@@ -53,10 +65,14 @@ Item {
         }
 
         Text {
-            text: row.busy ? "SWITCHING" : (row.on ? row.connector : "SLEEPING")
-            color: row.on ? (row.theme ? row.theme.onSurface : "#ffffff")
-                          : (row.theme ? row.theme.danger : "#ff4444")
-            opacity: row.on ? 0.45 : 0.9
+            width: parent.width
+            elide: Text.ElideRight
+            text: row.busy ? i18n("SWITCHING")
+                : row.failed ? i18n("FAILED")
+                : row.on ? row.connector : i18n("SLEEPING")
+            color: (row.on && !row.failed) ? (row.theme ? row.theme.onSurface : "#ffffff")
+                                           : (row.theme ? row.theme.danger : "#ff4444")
+            opacity: (row.on && !row.failed) ? 0.45 : 0.9
             font.pixelSize: 9
             font.letterSpacing: row.theme ? row.theme.labelSpacing : 1.5
             font.family: row.theme ? row.theme.fontFamily : "monospace"

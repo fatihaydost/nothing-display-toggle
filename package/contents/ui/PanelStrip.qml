@@ -2,6 +2,7 @@
 // display; there is no popup to open. Every size derives from the panel
 // thickness, so it fits a 24 px panel and a 64 px one alike.
 import QtQuick
+import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 
@@ -12,6 +13,12 @@ Item {
 
     readonly property Theme theme: controller ? controller.theme : null
 
+    // The strip draws straight onto the panel, not onto the card, so the
+    // card's near-white text would vanish on a light panel. Text follows the
+    // panel's own palette instead, unless the user picked a text colour.
+    readonly property color labelColor: theme && theme.textIsCustom
+                                        ? theme.onSurface : Kirigami.Theme.textColor
+
     readonly property bool vertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property real thickness: vertical ? strip.width : strip.height
 
@@ -21,6 +28,8 @@ Item {
     readonly property int gap: Math.max(3, Math.round(pillH * 0.4))
     // a vertical panel is too narrow for the name; the switch alone has to do
     readonly property bool showLabel: !vertical && thickness >= 22
+    // a long custom name is cut with an ellipsis rather than eating the panel
+    readonly property int labelMax: pillW * 4
 
     implicitWidth: vertical ? thickness : layout.implicitWidth + 2 * gap
     implicitHeight: vertical ? layout.implicitHeight + 2 * gap : thickness
@@ -49,7 +58,7 @@ Item {
             Text {
                 anchors.centerIn: parent
                 text: strip.controller && strip.controller.queried ? "!" : "…"
-                color: strip.theme ? strip.theme.onSurface : "#ffffff"
+                color: strip.labelColor
                 opacity: 0.7
                 font.pixelSize: strip.labelPx
                 font.family: strip.theme ? strip.theme.fontFamily : "monospace"
@@ -63,8 +72,10 @@ Item {
                 id: chip
 
                 readonly property bool locked: strip.controller.isLocked(model.enabled)
+                readonly property bool busy: strip.controller.pendingConn === model.conn
+                readonly property bool blocked: strip.controller.busy && !busy
 
-                width: strip.showLabel ? label.implicitWidth + strip.gap + strip.pillW
+                width: strip.showLabel ? label.width + strip.gap + strip.pillW
                                        : strip.pillW
                 height: strip.pillH
 
@@ -72,7 +83,9 @@ Item {
                     id: label
                     text: model.label
                     visible: strip.showLabel
-                    color: strip.theme ? strip.theme.onSurface : "#ffffff"
+                    width: Math.min(implicitWidth, strip.labelMax)
+                    elide: Text.ElideRight
+                    color: strip.labelColor
                     opacity: model.enabled ? 0.95 : 0.4
                     font.pixelSize: strip.labelPx
                     font.letterSpacing: strip.theme ? strip.theme.labelSpacing * 0.4 : 0.5
@@ -93,7 +106,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     color: model.enabled ? (strip.theme ? strip.theme.accent : "#ff4444")
                                          : (strip.theme ? strip.theme.trackOff : "#333333")
-                    opacity: strip.controller.busy ? 0.55 : (chip.locked ? 0.7 : 1.0)
+                    opacity: chip.busy ? 0.55 : (chip.locked ? 0.7 : 1.0)
 
                     Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -113,7 +126,8 @@ Item {
 
                 MouseArea {
                     anchors.fill: parent
-                    cursorShape: chip.locked ? Qt.ForbiddenCursor : Qt.PointingHandCursor
+                    cursorShape: chip.locked ? Qt.ForbiddenCursor
+                               : chip.blocked ? Qt.ArrowCursor : Qt.PointingHandCursor
                     onClicked: strip.controller.toggle(model.conn, model.enabled)
                 }
             }

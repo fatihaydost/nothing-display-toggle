@@ -1,5 +1,5 @@
-// The full card: one row per connected output. The desktop package shows it
-// directly; the panel package shows it as the popup.
+// The full card: one row per connected output. On the desktop it is the
+// widget itself; on a panel it is the popup behind the badge.
 import QtQuick
 
 Item {
@@ -8,9 +8,12 @@ Item {
     property DisplayController controller: null
     // the desktop widget floats the card with a margin; the popup fills instead
     property int margin: 10
+    // 0..1, only the card's fill: switches and text stay solid over the wallpaper
+    property real backgroundOpacity: 1.0
 
     readonly property Theme theme: controller ? controller.theme : null
     readonly property int rowCount: Math.max(1, controller ? controller.outputs.count : 0)
+    readonly property color fill: theme ? theme.background : "#1a1a1a"
 
     implicitWidth: 220
     implicitHeight: 57 * rowCount + 35 + 2 * margin
@@ -18,7 +21,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         anchors.margins: card.margin
-        color: card.theme ? card.theme.background : "#1a1a1a"
+        color: Qt.rgba(card.fill.r, card.fill.g, card.fill.b, card.backgroundOpacity)
         radius: 22
         clip: true
 
@@ -35,7 +38,7 @@ Item {
                 height: 12
 
                 Text {
-                    text: "DISPLAYS"
+                    text: i18n("DISPLAYS")
                     color: card.theme ? card.theme.onSurface : "#ffffff"
                     opacity: 0.5
                     font.pixelSize: 11
@@ -91,8 +94,10 @@ Item {
                         title: model.label
                         connector: model.conn
                         on: model.enabled
-                        busy: card.controller.busy
+                        busy: card.controller.pendingConn === model.conn
+                        blocked: card.controller.busy && !busy
                         locked: card.controller.isLocked(model.enabled)
+                        failed: card.controller.failedConn === model.conn
                         onToggled: card.controller.toggle(model.conn, model.enabled)
                     }
                 }
@@ -103,7 +108,7 @@ Item {
                 visible: card.controller && card.controller.queried
                          && card.controller.outputs.count === 0
                 width: parent.width
-                text: "NO OUTPUT FOUND\nIS KSCREEN-DOCTOR INSTALLED?"
+                text: i18n("NO OUTPUT FOUND\nIS KSCREEN-DOCTOR INSTALLED?")
                 color: card.theme ? card.theme.danger : "#ff4444"
                 opacity: 0.9
                 font.pixelSize: 10

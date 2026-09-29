@@ -26,6 +26,12 @@
     <entry name="textColor" type="String">
       <default></default>
     </entry>
+    <!-- desktop only: how solid the card is, in percent. The popup stays solid -->
+    <entry name="backgroundOpacity" type="Int">
+      <default>100</default>
+      <min>0</min>
+      <max>100</max>
+    </entry>
     <!-- connector -> the name the user typed, as JSON -->
     <entry name="outputNames" type="String">
       <default>{}</default>

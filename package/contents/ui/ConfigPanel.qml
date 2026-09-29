@@ -12,14 +12,26 @@ KCM.SimpleKCM {
     property alias cfg_inlineThreshold: threshold.value
     property int cfg_inlineThresholdDefault: 2
 
+    readonly property bool isAuto: cfg_panelMode !== "inline" && cfg_panelMode !== "popup"
+
+    // a RadioButton's `checked` binding dies on the first click; set from the
+    // setting instead so the Defaults button is reflected
+    function syncControls() {
+        modeAuto.checked = page.isAuto;
+        modeInline.checked = page.cfg_panelMode === "inline";
+        modePopup.checked = page.cfg_panelMode === "popup";
+    }
+    onCfg_panelModeChanged: syncControls()
+    Component.onCompleted: syncControls()
+
     Kirigami.FormLayout {
         anchors.left: parent.left
         anchors.right: parent.right
 
         QQC2.RadioButton {
+            id: modeAuto
             Kirigami.FormData.label: i18n("On the panel:")
             text: i18n("Automatic")
-            checked: page.cfg_panelMode !== "inline" && page.cfg_panelMode !== "popup"
             onToggled: if (checked) page.cfg_panelMode = "auto"
         }
 
@@ -36,14 +48,14 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Switch to a badge above:")
             from: 1
             to: 8
-            enabled: page.cfg_panelMode !== "inline" && page.cfg_panelMode !== "popup"
+            enabled: page.isAuto
         }
 
         Item { Kirigami.FormData.isSection: true }
 
         QQC2.RadioButton {
+            id: modeInline
             text: i18n("Always show a switch per display")
-            checked: page.cfg_panelMode === "inline"
             onToggled: if (checked) page.cfg_panelMode = "inline"
         }
 
@@ -58,8 +70,8 @@ KCM.SimpleKCM {
         Item { Kirigami.FormData.isSection: true }
 
         QQC2.RadioButton {
+            id: modePopup
             text: i18n("Always show a badge")
-            checked: page.cfg_panelMode === "popup"
             onToggled: if (checked) page.cfg_panelMode = "popup"
         }
 

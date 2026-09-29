@@ -4,6 +4,8 @@ import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.kquickcontrols as KQC
+import org.kde.plasma.plasmoid
+import org.kde.plasma.core as PlasmaCore
 
 KCM.SimpleKCM {
     id: page
@@ -16,6 +18,12 @@ KCM.SimpleKCM {
     property string cfg_backgroundColorDefault: ""
     property string cfg_textColor
     property string cfg_textColorDefault: ""
+    property alias cfg_backgroundOpacity: opacitySlider.value
+    property int cfg_backgroundOpacityDefault: 100
+
+    // the opacity only reaches the desktop card; on a panel the popup stays solid
+    readonly property bool onDesktop: Plasmoid.formFactor !== PlasmaCore.Types.Horizontal
+                                      && Plasmoid.formFactor !== PlasmaCore.Types.Vertical
 
     readonly property bool anyColourSet: cfg_accentColor.length > 0
                                          || cfg_backgroundColor.length > 0
@@ -25,6 +33,29 @@ KCM.SimpleKCM {
         id: liveTheme
         name: page.cfg_theme
     }
+
+    // A RadioButton's `checked` binding dies on the first click, and
+    // ColorButton.color is an alias onto its dialog, written when a colour is
+    // picked. Both are therefore set from here, on every change of the
+    // setting, so the Defaults button and the reset below stay in step.
+    function syncControls() {
+        var t = page.cfg_theme;
+        lookNothing.checked = t !== "kde" && t !== "minimal" && t !== "neon";
+        lookKde.checked = t === "kde";
+        lookMinimal.checked = t === "minimal";
+        lookNeon.checked = t === "neon";
+        accentButton.color = page.cfg_accentColor.length > 0
+                             ? page.cfg_accentColor : liveTheme.themeAccent;
+        backgroundButton.color = page.cfg_backgroundColor.length > 0
+                                 ? page.cfg_backgroundColor : liveTheme.themeBackground;
+        textButton.color = page.cfg_textColor.length > 0
+                           ? page.cfg_textColor : liveTheme.themeText;
+    }
+    onCfg_themeChanged: syncControls()
+    onCfg_accentColorChanged: syncControls()
+    onCfg_backgroundColorChanged: syncControls()
+    onCfg_textColorChanged: syncControls()
+    Component.onCompleted: syncControls()
 
     // background / accent / text of one theme, so the choice is visible here
     component Swatch: Item {
@@ -72,10 +103,9 @@ KCM.SimpleKCM {
         anchors.right: parent.right
 
         QQC2.RadioButton {
+            id: lookNothing
             Kirigami.FormData.label: i18n("Look:")
             text: i18n("Nothing")
-            checked: page.cfg_theme !== "kde" && page.cfg_theme !== "minimal"
-                     && page.cfg_theme !== "neon"
             onToggled: if (checked) page.cfg_theme = "nothing"
         }
         Swatch { themeName: "nothing" }
@@ -84,8 +114,8 @@ KCM.SimpleKCM {
         Item { Kirigami.FormData.isSection: true }
 
         QQC2.RadioButton {
+            id: lookKde
             text: i18n("Classic KDE")
-            checked: page.cfg_theme === "kde"
             onToggled: if (checked) page.cfg_theme = "kde"
         }
         Swatch { themeName: "kde" }
@@ -94,18 +124,18 @@ KCM.SimpleKCM {
         Item { Kirigami.FormData.isSection: true }
 
         QQC2.RadioButton {
+            id: lookMinimal
             text: i18n("Minimal")
-            checked: page.cfg_theme === "minimal"
             onToggled: if (checked) page.cfg_theme = "minimal"
         }
         Swatch { themeName: "minimal" }
-        Hint { text: i18n("No colour at all: greys and the interface font. A switched-on display is simply brighter.") }
+        Hint { text: i18n("No colour at all: greys in a quiet geometric face. A switched-on display is simply brighter.") }
 
         Item { Kirigami.FormData.isSection: true }
 
         QQC2.RadioButton {
+            id: lookNeon
             text: i18n("Neon")
-            checked: page.cfg_theme === "neon"
             onToggled: if (checked) page.cfg_theme = "neon"
         }
         Swatch { themeName: "neon" }
@@ -114,29 +144,26 @@ KCM.SimpleKCM {
         Item { Kirigami.FormData.isSection: true }
 
         KQC.ColorButton {
+            id: accentButton
             Kirigami.FormData.label: i18n("Accent:")
             showAlphaChannel: false
             dialogTitle: i18n("Accent colour")
-            color: page.cfg_accentColor.length > 0 ? page.cfg_accentColor
-                                                   : liveTheme.themeAccent
             onAccepted: (picked) => page.cfg_accentColor = picked.toString()
         }
 
         KQC.ColorButton {
+            id: backgroundButton
             Kirigami.FormData.label: i18n("Background:")
             showAlphaChannel: false
             dialogTitle: i18n("Background colour")
-            color: page.cfg_backgroundColor.length > 0 ? page.cfg_backgroundColor
-                                                       : liveTheme.themeBackground
             onAccepted: (picked) => page.cfg_backgroundColor = picked.toString()
         }
 
         KQC.ColorButton {
+            id: textButton
             Kirigami.FormData.label: i18n("Text:")
             showAlphaChannel: false
             dialogTitle: i18n("Text colour")
-            color: page.cfg_textColor.length > 0 ? page.cfg_textColor
-                                                 : liveTheme.themeText
             onAccepted: (picked) => page.cfg_textColor = picked.toString()
         }
 
@@ -155,6 +182,37 @@ KCM.SimpleKCM {
             text: page.anyColourSet
                   ? i18n("Your colours, on top of the chosen look. Dividers, the switch track and the knob are worked out from them, so nothing is left behind.")
                   : i18n("Following the chosen look. Set any of the three to override it.")
+        }
+
+        Item {
+            Kirigami.FormData.isSection: true
+            visible: page.onDesktop
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Background opacity:")
+            visible: page.onDesktop
+            spacing: Kirigami.Units.smallSpacing
+
+            QQC2.Slider {
+                id: opacitySlider
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+                from: 0
+                to: 100
+                stepSize: 5
+                snapMode: QQC2.Slider.SnapAlways
+            }
+
+            QQC2.Label {
+                // wide enough for "100%" so the slider does not shift while dragging
+                Layout.minimumWidth: Kirigami.Units.gridUnit * 2.5
+                text: i18nc("opacity in percent", "%1%", Math.round(opacitySlider.value))
+            }
+        }
+
+        Hint {
+            visible: page.onDesktop
+            text: i18n("How much of the wallpaper shows through the card. Switches and text stay solid.")
         }
 
         Item { Kirigami.FormData.isSection: true }

@@ -36,7 +36,9 @@ Item {
     Kirigami.Theme.colorSet: Kirigami.Theme.Window
     Kirigami.Theme.inherit: false
 
-    readonly property var palette: {
+    // named `look`, not `palette`: Item already has a palette property in Qt 6
+    // and shadowing it only works by accident
+    readonly property var look: {
         if (isKde) return {
             background: Kirigami.Theme.backgroundColor,
             accent:     Kirigami.Theme.highlightColor,
@@ -49,7 +51,7 @@ Item {
         }
         // no colour at all: the "on" state is simply brighter than the "off" one.
         // Kept dark like the others because the panel forms draw straight onto the
-        // panel, where a light palette would vanish.
+        // panel; the labels there take the panel's own text colour (PanelStrip).
         if (isMinimal) return {
             background: "#141414",
             accent:     "#e8e8e6",
@@ -83,14 +85,23 @@ Item {
     }
 
     // ── the three the user can set ────────────────────────────────────────
-    readonly property color themeAccent: palette.accent
-    readonly property color themeBackground: palette.background
-    readonly property color themeText: palette.onSurface
+    readonly property color themeAccent: look.accent
+    readonly property color themeBackground: look.background
+    readonly property color themeText: look.onSurface
 
-    readonly property color accent: accentOverride.length > 0 ? accentOverride : themeAccent
-    readonly property color background: backgroundOverride.length > 0
+    // Only "#rrggbb" is honoured. A hand-edited value, or "#aarrggbb" from a
+    // build that still allowed alpha, falls back to the look instead of
+    // logging a QColor assignment error and leaving the previous colour behind.
+    function _valid(s) {
+        return /^#[0-9a-fA-F]{6}$/.test(s);
+    }
+
+    readonly property color accent: _valid(accentOverride) ? accentOverride : themeAccent
+    readonly property color background: _valid(backgroundOverride)
                                         ? backgroundOverride : themeBackground
-    readonly property color onSurface: textOverride.length > 0 ? textOverride : themeText
+    readonly property color onSurface: _valid(textOverride) ? textOverride : themeText
+    // the panel forms follow the panel's own text colour unless this is set
+    readonly property bool textIsCustom: _valid(textOverride)
 
     // ── derived from those, so an override carries all the way through ────
     // Opaque rather than translucent: the panel forms draw onto the panel, not
@@ -102,10 +113,15 @@ Item {
                        1.0);
     }
 
-    readonly property color divider: _blend(onSurface, background, palette.dividerMix)
-    readonly property color trackOff: _blend(onSurface, background, palette.trackMix)
-    readonly property color knob: palette.knobIsBackground ? background : onSurface
-    readonly property color danger: palette.dangerIsAccent ? accent : palette.danger
+    // The one exception: the divider only ever sits on the card, and the card can
+    // be see-through on the desktop. A tint of the text colour lands on exactly
+    // the blended colour over a solid card, and fades along with a faded one
+    // instead of standing out as the darkest line on it.
+    readonly property color divider: Qt.rgba(onSurface.r, onSurface.g, onSurface.b,
+                                             look.dividerMix)
+    readonly property color trackOff: _blend(onSurface, background, look.trackMix)
+    readonly property color knob: look.knobIsBackground ? background : onSurface
+    readonly property color danger: look.dangerIsAccent ? accent : look.danger
 
     // ── type ──────────────────────────────────────────────────────────────
     readonly property string fontFamily: isKde ? Kirigami.Theme.defaultFont.family

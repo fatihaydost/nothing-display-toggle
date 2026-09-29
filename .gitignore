@@ -1,5 +1,5 @@
 # build output — attach to a GitHub release instead of committing
 *.plasmoid
 
-# staging directory assembled by build.sh
-build/
+# fonttools venv for tools/make-fonts.py
+.venv/

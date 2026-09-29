@@ -20,13 +20,14 @@ KCM.SimpleKCM {
         }
     }
 
-    property var names: ({})
-
-    Component.onCompleted: {
+    // Derived from the setting rather than cached once: the fields are built
+    // before this page's own Component.onCompleted runs, and the Defaults
+    // button rewrites the setting behind our back.
+    readonly property var names: {
         try {
-            page.names = JSON.parse(page.cfg_outputNames || "{}");
+            return JSON.parse(page.cfg_outputNames || "{}");
         } catch (e) {
-            page.names = ({});
+            return ({});
         }
     }
 
@@ -41,7 +42,6 @@ KCM.SimpleKCM {
             delete next[conn];
         }
 
-        page.names = next;
         page.cfg_outputNames = JSON.stringify(next);
     }
 
@@ -53,11 +53,18 @@ KCM.SimpleKCM {
             model: page.known
 
             delegate: QQC2.TextField {
+                id: field
+
+                readonly property string stored: page.names[modelData.conn] || ""
+
                 Kirigami.FormData.label: modelData.conn
                 placeholderText: modelData.auto
                 maximumLength: 24
-                // set once instead of bound, so typing does not fight the binding
-                Component.onCompleted: text = page.names[modelData.conn] || ""
+                // not bound, so typing does not fight the binding; refreshed
+                // only when the stored value moves away from what is typed
+                // (Defaults, or a rename of the same connector elsewhere)
+                Component.onCompleted: text = stored
+                onStoredChanged: if (text.trim() !== stored) text = stored
                 onTextEdited: page.rename(modelData.conn, text)
             }
         }

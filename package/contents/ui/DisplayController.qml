@@ -1,4 +1,4 @@
-// Shared brain for both packages. Reads the display layout from kscreen-doctor,
+// The brain behind every form. Reads the display layout from kscreen-doctor,
 // publishes it as a model, and applies toggles. Draws nothing itself.
 //
 // It also carries the type tokens, so the desktop card and the panel strip
@@ -19,6 +19,11 @@ Item {
     property alias outputs: outputModel
     property int enabledCount: 0
     property bool busy: false
+    // the connector a toggle is in flight for, so only that row reads SWITCHING
+    readonly property string pendingConn: _pendingConn
+    // the connector whose last toggle kscreen refused, shown briefly as FAILED
+    property string failedConn: ""
+    property string failedReason: ""
     // false until kscreen-doctor has answered once, so callers can keep the
     // "no output found" line hidden at startup instead of flashing it
     property bool queried: false
@@ -60,6 +65,11 @@ Item {
     property string _pendingConn: ""
     property bool _pendingWant: false
     property int _pendingTries: 0
+    // "check": a fresh read is on its way before a disable is issued, so the
+    // last-display lock is decided on current state rather than a poll up to
+    // 4 s old (another copy, or System Settings, may have switched one off)
+    // "apply": the command was issued, waiting for kscreen to report it
+    property string _pendingStage: ""
     // model signature: only rebuild when the set of outputs changes
     property string _signature: ""
 
@@ -72,10 +82,30 @@ Item {
 
     function toggle(conn, isEnabled) {
         if (ctl.busy || ctl.isLocked(isEnabled)) return;
+        ctl.failedConn = "";
         ctl._pendingConn = conn;
         ctl._pendingWant = !isEnabled;
         ctl._pendingTries = 0;
-        runDS.exec("kscreen-doctor output." + conn + (isEnabled ? ".disable" : ".enable"));
+        ctl.busy = true;
+        failsafeTimer.restart();
+        if (isEnabled) {
+            ctl._pendingStage = "check";
+            queryDS.refresh();
+        } else {
+            ctl._apply();
+        }
+    }
+
+    // the engine runs the command through sh -c, and the connector name comes
+    // from kscreen: quote it so no name can break out of its argument
+    function _shellQuote(s) {
+        return "'" + String(s).replace(/'/g, "'\\''") + "'";
+    }
+
+    function _apply() {
+        ctl._pendingStage = "apply";
+        runDS.exec("kscreen-doctor " + ctl._shellQuote("output." + ctl._pendingConn
+                   + (ctl._pendingWant ? ".enable" : ".disable")));
     }
 
     // ── implementation ────────────────────────────────────────────────────
@@ -109,7 +139,10 @@ Item {
             disconnectSource(sourceName);
             // an answer, even a failing one: the error line may now be shown
             ctl.queried = true;
-            if (!data || data["exit code"] !== 0) return;
+            if (!data || data["exit code"] !== 0) {
+                ctl._queryFailed();
+                return;
+            }
             ctl._handleQuery(data.stdout || "");
         }
 
@@ -125,25 +158,26 @@ Item {
 
         onNewData: (sourceName, data) => {
             disconnectSource(sourceName);
-            settleTimer.restart();
+            // kscreen-doctor exits 0 even when it refuses ("Output ... not
+            // found", a config that cannot be applied); the complaint is on
+            // stderr, so that is what decides
+            var err = (data && data.stderr) ? data.stderr.trim() : "";
+            if (!data || data["exit code"] !== 0 || err.length > 0) {
+                ctl._fail(err.length > 0 ? err : "kscreen-doctor failed");
+                return;
+            }
+            // the command returns once the change went through; read it
+            // back now, and keep asking while kscreen still reports the old
+            // state instead of guessing a fixed delay
+            queryDS.refresh();
         }
 
         function exec(cmd) {
-            ctl.busy = true;
-            failsafeTimer.restart();
             connectSource(cmd);
         }
     }
 
-    // kscreen needs a moment before the new state can be read back
-    Timer {
-        id: settleTimer
-        interval: 1500
-        repeat: false
-        onTriggered: queryDS.refresh()
-    }
-
-    // kscreen was not done yet: ask again instead of trusting a fixed delay
+    // kscreen was not done yet, or the read failed: ask again
     Timer {
         id: retryTimer
         interval: 600
@@ -151,12 +185,21 @@ Item {
         onTriggered: queryDS.refresh()
     }
 
+    // FAILED stays on the row long enough to be read, then the row goes back
+    // to showing the real state
+    Timer {
+        id: failedTimer
+        interval: 4000
+        repeat: false
+        onTriggered: ctl.failedConn = ""
+    }
+
     // the command never came back: do not sit in "SWITCHING" forever
     Timer {
         id: failsafeTimer
         interval: 12000
         repeat: false
-        onTriggered: ctl._clearPending()
+        onTriggered: ctl._fail("timed out")
     }
 
     Timer {
@@ -171,8 +214,24 @@ Item {
         retryTimer.stop();
         failsafeTimer.stop();
         ctl._pendingConn = "";
+        ctl._pendingStage = "";
         ctl._pendingTries = 0;
         ctl.busy = false;
+    }
+
+    function _fail(reason) {
+        ctl.failedReason = reason;
+        ctl.failedConn = ctl._pendingConn;
+        failedTimer.restart();
+        ctl._clearPending();
+    }
+
+    // a read that returned nothing usable while a toggle is pending: without
+    // this the retry chain would stop and busy would hang until the failsafe
+    function _queryFailed() {
+        if (ctl._pendingConn === "") return;
+        if (++ctl._pendingTries < 12) retryTimer.restart();
+        else ctl._fail("kscreen-doctor gave no answer");
     }
 
     // Stop showing "SWITCHING" only once kscreen reports the state we asked for.
@@ -195,7 +254,24 @@ Item {
         } else if (++ctl._pendingTries < 12) {
             retryTimer.restart();
         } else {
-            ctl._clearPending(); // give up: the 4 s poll keeps the row honest
+            ctl._fail("kscreen never reported the change");
+        }
+    }
+
+    // the fresh read before a disable: decide the lock on what is true now
+    function _resolveCheck(list) {
+        var stillOn = 0;
+        var target = null;
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].enabled) stillOn++;
+            if (list[i].conn === ctl._pendingConn) target = list[i];
+        }
+        if (!target || !target.enabled) {
+            ctl._clearPending(); // already off, or gone: nothing to do
+        } else if (stillOn < 2) {
+            ctl._clearPending(); // became the last one on meanwhile: keep it
+        } else {
+            ctl._apply();
         }
     }
 
@@ -266,6 +342,7 @@ Item {
                 });
             }
         } catch (e) {
+            ctl._queryFailed();
             return; // malformed output: keep the last known state
         }
 
@@ -291,6 +368,8 @@ Item {
         for (var e = 0; e < list.length; e++) if (list[e].enabled) n++;
         ctl.enabledCount = n;
 
-        if (ctl._pendingConn !== "") ctl._resolvePending(list);
+        if (ctl._pendingConn === "") return;
+        if (ctl._pendingStage === "check") ctl._resolveCheck(list);
+        else ctl._resolvePending(list);
     }
 }

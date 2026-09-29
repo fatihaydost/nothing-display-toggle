@@ -3,6 +3,7 @@
 // instead and only their visibility changes when the display count crosses the
 // threshold.
 import QtQuick
+import QtQuick.Layouts
 
 Item {
     id: compact
@@ -15,6 +16,14 @@ Item {
 
     implicitWidth: inline ? strip.implicitWidth : badge.implicitWidth
     implicitHeight: inline ? strip.implicitHeight : badge.implicitHeight
+
+    // The panel sizes an applet from its Layout hints and ignores the implicit
+    // size. Without them it hands out a square as thick as the panel, and a
+    // strip of two or more switches spills over the neighbours on both sides.
+    Layout.minimumWidth: implicitWidth
+    Layout.preferredWidth: implicitWidth
+    Layout.minimumHeight: implicitHeight
+    Layout.preferredHeight: implicitHeight
 
     PanelStrip {
         id: strip
